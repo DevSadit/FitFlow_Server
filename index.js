@@ -61,22 +61,70 @@ async function run() {
       res.send(result);
     });
 
-    // update a member to trainer
-    app.patch(`/trainer/update/:email`, async (req, res) => {
+    // ///////////////////////////////////////////////////////////
+    app.patch("/trainer/update/:email", async (req, res) => {
       const email = req.params.email;
-      user = req.body;
-      const query = { email };
+      const user = req.body;
+
+      const trainerQuery = { email };
       const updateDoc = {
         $set: { ...user },
       };
-      const result = await trainerCollection.updateOne(query, updateDoc);
-      res.send(result);
+
+      try {
+        // Update the trainer collection
+        const trainerUpdateResult = await trainerCollection.updateOne(
+          trainerQuery,
+          updateDoc
+        );
+
+        if (trainerUpdateResult.matchedCount > 0) {
+          const userQuery = { email };
+          const updateUserRole = {
+            $set: { ...user },
+          };
+
+          // Update the user collection
+          const userUpdateResult = await userCollection.updateOne(
+            userQuery,
+            updateUserRole
+          );
+
+          res.send({
+            trainerUpdateResult,
+            userUpdateResult,
+          });
+        } else {
+          res.status(404).send({ error: "Trainer not found" });
+        }
+      } catch (error) {
+        res
+          .status(500)
+          .send({
+            error: "An error occurred while updating the data",
+            details: error.message,
+          });
+      }
     });
+
+    // ////////////////////////////////////////////////////////////
+
+    // update a member to trainer
+    // app.patch(`/trainer/update/:email`, async (req, res) => {
+    //   const email = req.params.email;
+    //   user = req.body;
+    //   const query = { email };
+    //   const updateDoc = {
+    //     $set: { ...user },
+    //   };
+    //   const result = await trainerCollection.updateOne(query, updateDoc);
+    //   res.send(result);
+    // });
 
     // get real trainers and applied trainers based on status
     app.get(`/trainers/:status`, async (req, res) => {
       const status = req.params.status;
-      console.log(status);
+      // console.log(status);
 
       const result = await trainerCollection.find({ status }).toArray();
       res.send(result);

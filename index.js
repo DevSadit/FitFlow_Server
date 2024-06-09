@@ -61,26 +61,26 @@ async function run() {
       res.send(result);
     });
 
-    // get the applied trainers data from database
-    app.get(`/applied-trainers`, async (req, res) => {
-      const query = { status: `Pending` };
-      const result = await trainerCollection.find(query).toArray();
+    // update a member to trainer
+    app.patch(`/trainer/update/:email`, async (req, res) => {
+      const email = req.params.email;
+      user = req.body;
+      const query = { email };
+      const updateDoc = {
+        $set: { ...user },
+      };
+      const result = await trainerCollection.updateOne(query, updateDoc);
       res.send(result);
     });
 
-    //
-    // app.get("/trainers", async (req, res) => {
-    //   const query = { status: "Accepted" };
-    //   if (query) {
-    //     const result = await trainerCollection.find(query).toArray();
-    //     res.send(result);
-    //   }
-    //   else {
-    //     const result = await trainerCollection.find().toArray();
-    //     res.send(result);
-    //   }
-    // });
-    //
+    // get real trainers and applied trainers based on status
+    app.get(`/trainers/:status`, async (req, res) => {
+      const status = req.params.status;
+      console.log(status);
+
+      const result = await trainerCollection.find({ status }).toArray();
+      res.send(result);
+    });
 
     // getting trainer with selected id
     app.get(`/trainer/:id`, async (req, res) => {
@@ -111,7 +111,7 @@ async function run() {
     });
 
     // Delete trainer from db
-    app.delete("/trainers/:id", async (req, res) => {
+    app.delete("/trainer/:id", async (req, res) => {
       const trainerId = req.params.id;
       const query = { _id: new ObjectId(trainerId) };
       const result = await trainerCollection.deleteOne(query);

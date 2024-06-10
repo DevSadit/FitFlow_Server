@@ -38,6 +38,7 @@ async function run() {
       .db(`Fitness_Tracker`)
       .collection(`trainers`);
     const userCollection = client.db(`Fitness_Tracker`).collection(`users`);
+    const classCollection = client.db(`Fitness_Tracker`).collection(`classes`);
     const newsletterUserCollection = client
       .db(`Fitness_Tracker`)
       .collection(`newsletter`);
@@ -98,12 +99,10 @@ async function run() {
           res.status(404).send({ error: "Trainer not found" });
         }
       } catch (error) {
-        res
-          .status(500)
-          .send({
-            error: "An error occurred while updating the data",
-            details: error.message,
-          });
+        res.status(500).send({
+          error: "An error occurred while updating the data",
+          details: error.message,
+        });
       }
     });
 
@@ -158,6 +157,22 @@ async function run() {
       res.send(result);
     });
 
+    // get the class data from db
+    app.get("/classes", async (req, res) => {
+      const result = await classCollection.find().toArray();
+      res.send(result);
+    });
+
+    //
+    // getting teacher info based on category from db
+    app.get("/classTrainer/:category", async (req, res) => {
+      const category = req.params.category;
+      const result = await trainerCollection.find({category}).toArray();
+      // const result = await trainerCollection.find({ category }).toArray();
+      res.send(result);
+    });
+    //
+
     // Delete trainer from db
     app.delete("/trainer/:id", async (req, res) => {
       const trainerId = req.params.id;
@@ -177,6 +192,13 @@ async function run() {
     app.post("/newsletter", async (req, res) => {
       const newsletterUser = req.body;
       const result = newsletterUserCollection.insertOne(newsletterUser);
+      res.send(result);
+    });
+
+    // post class data by admin to db
+    app.post("/classes", async (req, res) => {
+      const classInfo = req.body;
+      const result = classCollection.insertOne(classInfo);
       res.send(result);
     });
 

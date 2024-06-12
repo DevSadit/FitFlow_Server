@@ -7,7 +7,7 @@ const app = express();
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://fitness-tracker-d37b8.web.app"],
     credentials: true,
   })
 );

@@ -28,7 +28,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const testimonialCollection = client
       .db(`Fitness_Tracker`)
@@ -62,6 +62,19 @@ async function run() {
       res.send(result);
     });
 
+    // Route to get random classes
+    app.get("/recommended-classes", async (req, res) => {
+      try {
+        const count = await classCollection.countDocuments();
+        const random = Math.floor(Math.random() * count);
+        const classes = await classCollection
+          .aggregate([{ $sample: { size: 3 } }])
+          .toArray();
+        res.json(classes);
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+    });
     // ///////////////////////////////////////////////////////////
     app.patch("/trainer/update/:email", async (req, res) => {
       const email = req.params.email;
@@ -153,7 +166,7 @@ async function run() {
     // getting teacher info based on category from db
     app.get("/classTrainer/:category", async (req, res) => {
       const category = req.params.category;
-      const result = await trainerCollection.find({category}).toArray();
+      const result = await trainerCollection.find({ category }).toArray();
       // const result = await trainerCollection.find({ category }).toArray();
       res.send(result);
     });
@@ -203,7 +216,9 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    app.get("/", (req, res) => {
+      res.send(`fitnes tracker server is working!!`);
+    });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
@@ -215,9 +230,7 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.get("/", (req, res) => {
-  res.send(`fitnes tracker server is working!!`);
-});
+
 
 app.listen(port, () => {
   console.log(`fitnes tracker is working on port ${port}`);

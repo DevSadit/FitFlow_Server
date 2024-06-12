@@ -75,7 +75,7 @@ async function run() {
         res.status(500).json({ message: error.message });
       }
     });
-    // ///////////////////////////////////////////////////////////
+   
     app.patch("/trainer/update/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;

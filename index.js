@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require(`jsonwebtoken`);
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
@@ -7,7 +8,11 @@ const app = express();
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://fitness-tracker-d37b8.web.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://fitness-tracker-d37b8.web.app",
+      "https://fitness-tracker-server-ruddy.vercel.app",
+    ],
     credentials: true,
   })
 );
@@ -43,6 +48,16 @@ async function run() {
       .db(`Fitness_Tracker`)
       .collection(`newsletter`);
 
+    // auth rerlated api
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      console.log(`user for token`, user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "2h",
+      });
+      res.send({ token });
+    });
+
     //   get the testimonials from database
     app.get(`/testimonials`, async (req, res) => {
       const result = await testimonialCollection.find().toArray();
@@ -51,9 +66,51 @@ async function run() {
 
     //   get the posts from database
     app.get(`/posts`, async (req, res) => {
-      const result = await postCollection.find().toArray();
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      // console.log(`pagination Query`, page, size);
+      const totalPosts = await postCollection.countDocuments();
+      const result = await postCollection
+        .find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(result);
     });
+
+    app.get(`/postsCount`, async (req, res) => {
+      const count = await postCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
+    ////////////////////////////////////////////////////////////////
+
+    // upload a post by trainer or admin
+    app.post("/post", async (req, res) => {
+      const classInfo = req.body;
+      const result = postCollection.insertOne(classInfo);
+      res.send(result);
+    });
+    // Upvote a Post
+    app.post("/posts/:id/upvote", async (req, res) => {
+      const postId = req.params.id;
+      const result = await postCollection.updateOne(
+        { _id: new ObjectId(postId) },
+        { $inc: { upvotes: 1 } }
+      );
+      res.json({ message: "Post upvoted" });
+    });
+
+    // Downvote a Post
+    app.post("/posts/:id/downvote", async (req, res) => {
+      const postId = req.params.id;
+      await postCollection.updateOne(
+        { _id: new ObjectId(postId) },
+        { $inc: { downvotes: 1 } }
+      );
+      res.json({ message: "Post downvoted" });
+    });
+
+    // ///////////////////////////////////////////////////////////////////////
 
     // get the accepted trainers data from database
     app.get(`/trainers`, async (req, res) => {
@@ -75,7 +132,7 @@ async function run() {
         res.status(500).json({ message: error.message });
       }
     });
-   
+
     app.patch("/trainer/update/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
@@ -132,8 +189,14 @@ async function run() {
     app.get(`/trainer/:id`, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      // console.log(query);
       const result = await trainerCollection.findOne(query);
+      res.send(result);
+    });
+
+    // getting trainer with selected email
+    app.get(`/trainerr/:email`, async (req, res) => {
+      const email = req.params.email;
+      const result = await trainerCollection.findOne({ email });
       res.send(result);
     });
 
@@ -158,10 +221,22 @@ async function run() {
 
     // get the class data from db
     app.get("/classes", async (req, res) => {
-      const result = await classCollection.find().toArray();
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      // console.log(`pagination Query`, page, size);
+      const result = await classCollection
+        .find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(result);
     });
 
+    // get the count of all classes
+    app.get(`/classesCount`, async (req, res) => {
+      const count = await classCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
     //
     // getting teacher info based on category from db
     app.get("/classTrainer/:category", async (req, res) => {
@@ -179,6 +254,30 @@ async function run() {
       const result = await trainerCollection.deleteOne(query);
       res.send(result);
     });
+
+    // delete a trainer slot from database
+    app.delete("/trainer/:trainerId/:slot", async (req, res) => {
+      const trainerId = req.params.trainerId;
+      const { day } = req.body;
+
+      // if-there-is-no-trainer-id-and-slot-day
+      if (!trainerId || !day) {
+        return res
+          .status(400)
+          .send({ message: "Trainer ID and day are required." });
+      }
+
+      try {
+        const query = { _id: new ObjectId(trainerId) };
+        const update = { $pull: { availableDay: { value: day } } };
+
+        const result = await trainerCollection.updateOne(query, update);
+        res.send(result);
+      } catch (error) {
+        res.send(error);
+      }
+    });
+    //
 
     // post trainers to db
     app.post("/trainers", async (req, res) => {
@@ -229,8 +328,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
 
 app.listen(port, () => {
   console.log(`fitnes tracker is working on port ${port}`);

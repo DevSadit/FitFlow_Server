@@ -11,6 +11,7 @@ Follow these steps to run the project locally on your machine.
 Make sure you have the following installed on your machine:
 - [Node.js](https://nodejs.org/)
 - [MongoDB](https://www.mongodb.com/)
+- [Nodemon](https://nodemon.io/)
 
 ### Installation
 
@@ -46,7 +47,7 @@ Make sure you have the following installed on your machine:
 5. **Run the development server:**
 
     ```bash
-    npm run dev
+    nodemon index.js
     ```
 
 ### 🎉 You're all set!

@@ -2,6 +2,57 @@
 # ZenZap
 - ## Live Side Url: https://fitness-tracker-d37b8.web.app
 
+## 🚀 Run this to your local machine
+
+Follow these steps to run the project locally on your machine.
+
+### Prerequisites
+
+Make sure you have the following installed on your machine:
+- [Node.js](https://nodejs.org/)
+- [MongoDB](https://www.mongodb.com/)
+
+### Installation
+
+1. **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/DevSadit/fitness-tracker-server-ass-12.git
+    ```
+
+2. **Navigate to the project directory:**
+
+    ```bash
+    cd fitness-tracker-server-ass-12
+    ```
+
+3. **Install dependencies:**
+
+    ```bash
+    npm install
+    ```
+
+4. **Set up environment variables:**
+
+    Create a `.env` file in the root directory and add the following:
+
+    ```env
+    MONGODB_URI=your_mongodb_uri
+    PORT=3000
+    ```
+
+    Replace `your_mongodb_uri` with your actual MongoDB connection string.
+
+5. **Run the development server:**
+
+    ```bash
+    npm run dev
+    ```
+
+### 🎉 You're all set!
+
+The server should now be running on `http://localhost:3000`.
+
 
 -  ## features and characteristics of this website-
 - Admins have a comprehensive dashboard to manage all aspects of the website including user accounts, class schedules, and trainers. They can add or remove users, update class details, and monitor website analytics.Trainers have their own dashboard to manage the classes they offer. They can create new classes, update class information, track member attendance, and communicate with members. Members can view available classes, book or join classes, view their booking history, and communicate with their trainers.

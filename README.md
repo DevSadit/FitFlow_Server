@@ -65,6 +65,11 @@ The server should now be running on `http://localhost:3000`.
 - **Communication Tools:** Built-in messaging and real-time notifications.
 - **Analytics & Reporting:** Insights on member activity, class attendance, and engagement.
 
+## Overview
+
+The **Fitness Tracker Server** is a powerful backend application built with Node.js, Express, and MongoDB to support a comprehensive fitness tracking platform. It features robust dashboards for admins, trainers, and members, enabling efficient management of users, classes, and schedules. The platform offers real-time class booking, calendar integration, automated reminders, and seamless communication tools. Designed with a responsive UI, it ensures a smooth user experience across all devices. Detailed analytics and reporting tools provide valuable insights to optimize performance and user engagement.
+
+
 -  ## NPM Packages which is used in this Project -
 - react icon
 - react tooltip

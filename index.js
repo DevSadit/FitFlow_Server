@@ -29,7 +29,8 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-
+// console.log(process.env.DB_USER)
+// console.log(process.env.DB_PASS)
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -47,17 +48,8 @@ async function run() {
     const newsletterUserCollection = client
       .db(`Fitness_Tracker`)
       .collection(`newsletter`);
-
-    // auth rerlated api
-    app.post("/jwt", async (req, res) => {
-      const user = req.body;
-      console.log(`user for token`, user);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "2h",
-      });
-      res.send({ token });
-    });
-
+      
+  
     //   get the testimonials from database
     app.get(`/testimonials`, async (req, res) => {
       const result = await testimonialCollection.find().toArray();
@@ -93,21 +85,63 @@ async function run() {
     // Upvote a Post
     app.post("/posts/:id/upvote", async (req, res) => {
       const postId = req.params.id;
+      const { userId, previousVote } = req.body;
+      
+      // If user previously downvoted, remove the downvote
+      if (previousVote === "downvote") {
+        await postCollection.updateOne(
+          { _id: new ObjectId(postId) },
+          { $inc: { downvotes: -1 } }
+        );
+      }
+      
+      // If user previously upvoted, remove the upvote (toggle off)
+      else if (previousVote === "upvote") {
+        await postCollection.updateOne(
+          { _id: new ObjectId(postId) },
+          { $inc: { upvotes: -1 } }
+        );
+        return res.json({ message: "Upvote removed", action: "removed" });
+      }
+      
+      // Add new upvote
       const result = await postCollection.updateOne(
         { _id: new ObjectId(postId) },
         { $inc: { upvotes: 1 } }
       );
-      res.json({ message: "Post upvoted" });
+      
+      res.json({ message: "Post upvoted", action: "upvoted" });
     });
 
     // Downvote a Post
     app.post("/posts/:id/downvote", async (req, res) => {
       const postId = req.params.id;
+      const { userId, previousVote } = req.body;
+      
+      // If user previously upvoted, remove the upvote
+      if (previousVote === "upvote") {
+        await postCollection.updateOne(
+          { _id: new ObjectId(postId) },
+          { $inc: { upvotes: -1 } }
+        );
+      }
+      
+      // If user previously downvoted, remove the downvote (toggle off)
+      else if (previousVote === "downvote") {
+        await postCollection.updateOne(
+          { _id: new ObjectId(postId) },
+          { $inc: { downvotes: -1 } }
+        );
+        return res.json({ message: "Downvote removed", action: "removed" });
+      }
+      
+      // Add new downvote
       await postCollection.updateOne(
         { _id: new ObjectId(postId) },
         { $inc: { downvotes: 1 } }
       );
-      res.json({ message: "Post downvoted" });
+      
+      res.json({ message: "Post downvoted", action: "downvoted" });
     });
 
     // ///////////////////////////////////////////////////////////////////////
